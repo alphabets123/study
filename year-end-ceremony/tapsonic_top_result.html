@@ -624,12 +624,19 @@
 
   <script>
     /* =====================================================================
-       [1. 다이아몬드 샤드 파티클]
+       [1. 프로페셔널 아케이드 임팩트 VFX 엔진]
+       싸구려 캔버스 종이 꽃가루를 완전히 걷어내고, 
+       실제 리듬게임/격투게임에서 사용하는 3중 임팩트 시스템 탑재:
+       ① 레이저 스트릭 스파크 (속도에 비례해 꼬리가 늘어나는 예리한 광선 바늘)
+       ② 순간 스타버스트 임팩트 (0.15초 만에 공간을 찢는 예리한 기하학 광선)
+       ③ 고속 팽창 쇼크웨이브 링 (순간적인 충격파 파동)
        ===================================================================== */
     const canvas = document.getElementById('fx-canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
-    let shards = [];
+    let sparks = [];
+    let starbursts = [];
+    let shockwaves = [];
 
     function resize() {
       width = canvas.width = window.innerWidth;
@@ -638,62 +645,172 @@
     window.addEventListener('resize', resize);
     resize();
 
-    class Shard {
+    // ① 레이저 스트릭 스파크 (속도 비례 궤적 선)
+    class LaserSpark {
       constructor(x, y, color) {
         this.x = x;
         this.y = y;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 14 + 6;
+        // 초고속 초기 속도
+        const speed = Math.random() * 22 + 10;
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
-        this.size = Math.random() * 16 + 5;
-        this.angle = Math.random() * Math.PI;
-        this.rotSpeed = (Math.random() - 0.5) * 0.25;
+        this.lengthScale = Math.random() * 2.5 + 2.0; // 꼬리 길이 계수
+        this.width = Math.random() * 3.5 + 1.5;
         this.alpha = 1;
-        this.decay = Math.random() * 0.025 + 0.015;
+        this.decay = Math.random() * 0.045 + 0.035; // 매우 빠른 소멸 (0.2~0.3초 컷)
         this.color = color || '#00e5ff';
       }
       update() {
         this.x += this.vx;
         this.y += this.vy;
-        this.vx *= 0.94;
-        this.vy *= 0.94;
-        this.angle += this.rotSpeed;
+        this.vx *= 0.88; // 강력한 공기저항 감속
+        this.vy *= 0.88;
         this.alpha -= this.decay;
         return this.alpha > 0;
       }
       draw() {
         ctx.save();
         ctx.globalAlpha = Math.max(0, this.alpha);
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-        ctx.fillStyle = this.color;
-        ctx.shadowBlur = 10;
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = this.width;
+        ctx.lineCap = 'round';
+        ctx.shadowBlur = 15;
         ctx.shadowColor = this.color;
+
+        // 속도 벡터의 반대 방향으로 길게 꼬리를 그리는 물리 궤적
         ctx.beginPath();
-        ctx.moveTo(0, -this.size);
-        ctx.lineTo(this.size * 0.7, 0);
-        ctx.lineTo(0, this.size);
-        ctx.lineTo(-this.size * 0.7, 0);
-        ctx.closePath();
-        ctx.fill();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x - this.vx * this.lengthScale, this.y - this.vy * this.lengthScale);
+        ctx.stroke();
+
         ctx.restore();
       }
     }
 
-    function burstShards(x, y, count = 70, color = '#ff135d') {
+    // ② 순간 스타버스트 임팩트 (8방향 예리한 십자/별빛 섬광)
+    class Starburst {
+      constructor(x, y, maxRadius, color) {
+        this.x = x;
+        this.y = y;
+        this.radius = 5;
+        this.maxRadius = maxRadius || 120;
+        this.color = color || '#ffffff';
+        this.alpha = 1;
+        this.life = 0;
+      }
+      update() {
+        this.life += 0.08;
+        this.radius += (this.maxRadius - this.radius) * 0.45;
+        this.alpha = Math.max(0, 1 - this.life);
+        return this.alpha > 0;
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.translate(this.x, this.y);
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = this.color;
+
+        // 예리한 4방향 다이아몬드 스파이크
+        ctx.beginPath();
+        const r = this.radius;
+        const w = r * 0.12;
+        ctx.moveTo(0, -r);
+        ctx.lineTo(w, 0);
+        ctx.lineTo(0, r);
+        ctx.lineTo(-w, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(-r, 0);
+        ctx.lineTo(0, w);
+        ctx.lineTo(r, 0);
+        ctx.lineTo(0, -w);
+        ctx.closePath();
+        ctx.fill();
+
+        // 중앙 고밀도 화이트 코어
+        ctx.beginPath();
+        ctx.arc(0, 0, w * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        ctx.restore();
+      }
+    }
+
+    // ③ 고속 팽창 쇼크웨이브 링
+    class ShockwaveRing {
+      constructor(x, y, maxR, color) {
+        this.x = x;
+        this.y = y;
+        this.r = 10;
+        this.maxR = maxR || 180;
+        this.color = color || '#ffffff';
+        this.alpha = 0.9;
+      }
+      update() {
+        this.r += (this.maxR - this.r) * 0.35;
+        this.alpha *= 0.82;
+        return this.alpha > 0.02;
+      }
+      draw() {
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = Math.max(1, 6 * this.alpha);
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // 프로급 임팩트 트리거 함수
+    function triggerGameImpact(x, y, color = '#ff135d', intensity = 1) {
+      // 1. 스타버스트 섬광
+      starbursts.push(new Starburst(x, y, 140 * intensity, '#ffffff'));
+      // 2. 쇼크웨이브 링
+      shockwaves.push(new ShockwaveRing(x, y, 200 * intensity, color));
+      // 3. 레이저 스트릭 스파크 (빠르게 튀는 예리한 바늘)
+      const count = Math.floor(45 * intensity);
       for (let i = 0; i < count; i++) {
-        shards.push(new Shard(x, y, color));
+        sparks.push(new LaserSpark(x, y, color));
+        if (i % 3 === 0) {
+          sparks.push(new LaserSpark(x, y, '#ffffff')); // 화이트 스파크 혼합
+        }
       }
     }
 
     function renderLoop() {
       ctx.clearRect(0, 0, width, height);
-      shards = shards.filter(s => {
+
+      // 링 렌더
+      shockwaves = shockwaves.filter(sw => {
+        const alive = sw.update();
+        if (alive) sw.draw();
+        return alive;
+      });
+
+      // 스타버스트 렌더
+      starbursts = starbursts.filter(sb => {
+        const alive = sb.update();
+        if (alive) sb.draw();
+        return alive;
+      });
+
+      // 스파크 렌더
+      sparks = sparks.filter(s => {
         const alive = s.update();
         if (alive) s.draw();
         return alive;
       });
+
       requestAnimationFrame(renderLoop);
     }
     renderLoop();
@@ -701,7 +818,7 @@
     function stageShake(power = 15) {
       gsap.fromTo('#screen-viewport', 
         { x: (Math.random() - 0.5) * power, y: (Math.random() - 0.5) * power },
-        { x: 0, y: 0, duration: 0.3, ease: "elastic.out(1, 0.3)" }
+        { x: 0, y: 0, duration: 0.25, ease: "elastic.out(1, 0.3)" }
       );
     }
 
@@ -734,7 +851,7 @@
           ease: "power4.out",
           onComplete: () => {
             stageShake(12);
-            burstShards(window.innerWidth * 0.22, window.innerHeight * 0.5, 40, '#00e5ff');
+            triggerGameImpact(window.innerWidth * 0.22, window.innerHeight * 0.5, '#00e5ff', 0.8);
           }
         }, "-=0.2")
 
@@ -773,29 +890,29 @@
           }
         }, "-=0.6")
 
-        // 4. 랭크 S+ 엠블럼 쾅 찍히기!
+        // 4. 랭크 S+ 엠블럼 쾅 찍히기! (예리한 골드 임팩트 레이 & 쇼크웨이브)
         .to('#rank-box', {
           scale: 1,
           opacity: 1,
           rotate: 0,
-          duration: 0.5,
+          duration: 0.45,
           ease: "power4.in",
           onComplete: () => {
             stageShake(24);
-            burstShards(window.innerWidth * 0.45, window.innerHeight * 0.32, 80, '#ffdb00');
+            triggerGameImpact(window.innerWidth * 0.45, window.innerHeight * 0.32, '#ffdb00', 1.4);
           }
         }, "-=0.5")
 
-        // 5. PERFECT PLAY 대각선 도장 쾅!
+        // 5. PERFECT PLAY 대각선 도장 쾅! (핫핑크 레이저 스파크 & 십자 광선)
         .to('#stamp-perfect', {
           scale: 1,
           opacity: 1,
           rotate: -18,
-          duration: 0.4,
+          duration: 0.35,
           ease: "back.out(2.5)",
           onComplete: () => {
             stageShake(20);
-            burstShards(window.innerWidth * 0.22, window.innerHeight * 0.5, 90, '#ff135d');
+            triggerGameImpact(window.innerWidth * 0.22, window.innerHeight * 0.5, '#ff135d', 1.3);
           }
         }, "+=0.2");
     }
