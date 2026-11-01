@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 연말 송년의 밤 & 의료대상 시상식</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Montserrat:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <!-- GSAP Animation Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <style>
+    :root {
+      --gold-primary: #f2c94c;
+      --gold-secondary: #f2994a;
+      --gold-bright: #ffe699;
+      --gold-gradient: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+      --text-gold-shimmer: linear-gradient(90deg, #d4af37 0%, #fff6cd 50%, #d4af37 100%);
+      --bg-dark: #060913;
+      --card-bg: rgba(16, 24, 43, 0.65);
+      --card-border: rgba(212, 175, 55, 0.25);
+      --card-border-glow: rgba(242, 201, 76, 0.45);
+      --accent-blue: #1e3a8a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #ffffff;
+      font-family: 'Noto Sans KR', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* 배경 캔버스 (실시간 벡터 파티클 & 빛무리 효과) */
+    #bg-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* 오로라 광원 효과 (CSS 앰비언트) */
+    .ambient-glow {
+      position: absolute;
+      width: 60vw;
+      height: 60vh;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+      animation: floatAmbient 18s ease-in-out infinite alternate;
+    }
+    .ambient-1 {
+      top: -15%;
+      left: 10%;
+      background: radial-gradient(circle, #aa771c, #000 70%);
+    }
+    .ambient-2 {
+      bottom: -15%;
+      right: 5%;
+      background: radial-gradient(circle, #1e3a8a, #000 70%);
+      animation-duration: 22s;
+    }
+
+    @keyframes floatAmbient {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(8%, 10%) scale(1.15); }
+    }
+
+    /* 전체 레이아웃 컨테이너 */
+    .screen-container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 2.2vh 3.5vw 1.8vh 3.5vw;
+      backdrop-filter: blur(2px);
+    }
+
+    /* 1. 상단 헤더 */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1.6vh;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      position: relative;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 20%;
+      width: 60%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #fcf6ba, transparent);
+      box-shadow: 0 0 10px #fcf6ba;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 1.2vw;
+    }
+
+    .hospital-emblem {
+      width: 4.2vw;
+      height: 4.2vw;
+      min-width: 48px;
+      min-height: 48px;
+      background: rgba(212, 175, 55, 0.08);
+      border: 1.5px solid rgba(242, 201, 76, 0.6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+    }
+
+    .hospital-emblem svg {
+      width: 60%;
+      height: 60%;
+      fill: url(#goldLinear);
+    }
+
+    .title-group h1 {
+      font-size: 2.4vw;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 25px rgba(242, 201, 76, 0.25);
+      line-height: 1.2;
+    }
+
+    .title-group p {
+      font-size: 0.95vw;
+      color: #9cb1d1;
+      letter-spacing: 0.12em;
+      font-weight: 400;
+      margin-top: 0.3vh;
+    }
+
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 2vw;
+    }
+
+    .live-clock {
+      text-align: right;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .live-clock .time {
+      font-size: 1.9vw;
+      font-weight: 700;
+      color: #f7fafc;
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+    }
+
+    .live-clock .date {
+      font-size: 0.85vw;
+      color: #d4af37;
+      letter-spacing: 0.08em;
+    }
+
+    /* 2. 메인 바디 (식순 좌측 + 수상자 명단 우측) */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 31% 67%;
+      gap: 2%;
+      padding-top: 2vh;
+      min-height: 0; /* flex overflow 방지 */
+    }
+
+    /* 패널 공통 글래스모피즘 */
+    .glass-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 12px 35px 0 rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      padding: 2vh 1.6vw;
+    }
+
+    .glass-panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 10% 10%, rgba(212, 175, 55, 0.06), transparent 50%);
+      pointer-events: none;
+    }
+
+    /* 섹션 타이틀 */
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2vh;
+      padding-bottom: 1vh;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6vw;
+      font-size: 1.35vw;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .panel-title .icon {
+      color: var(--gold-primary);
+      filter: drop-shadow(0 0 6px rgba(242, 201, 76, 0.6));
+    }
+
+    .badge-sub {
+      font-size: 0.75vw;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      color: #fce79f;
+      padding: 0.3vh 0.7vw;
+      border-radius: 20px;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+
+    /* --- [좌측: 행사 식순 타임라인] --- */
+    .order-list {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      position: relative;
+      padding-left: 1.5vw;
+    }
+
+    .order-list::before {
+      content: '';
+      position: absolute;
+      top: 2vh;
+      bottom: 2vh;
+      left: 0.6vw;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(212, 175, 55, 0.8) 0%, rgba(212, 175, 55, 0.2) 100%);
+    }
+
+    .order-item {
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding: 0.9vh 0.8vw;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+    }
+
+    .order-item.active {
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(242, 201, 76, 0.4);
+      box-shadow: 0 0 15px rgba(242, 201, 76, 0.15);
+    }
+
+    .order-item::before {
+      content: '';
+      position: absolute;
+      left: -1.25vw;
+      width: 0.7vw;
+      height: 0.7vw;
+      min-width: 9px;
+      min-height: 9px;
+      border-radius: 50%;
+      background: #101c34;
+      border: 2px solid #826a27;
+      transition: all 0.3s ease;
+    }
+
+    .order-item.active::before {
+      background: #ffd700;
+      border-color: #fff;
+      box-shadow: 0 0 10px #ffd700;
+      animation: pulseDot 1.8s infinite;
+    }
+
+    @keyframes pulseDot {
+      0% { transform: scale(1); box-shadow: 0 0 6px #ffd700; }
+      50% { transform: scale(1.3); box-shadow: 0 0 14px #ffe699; }
+      100% { transform: scale(1); box-shadow: 0 0 6px #ffd700; }
+    }
+
+    .order-num {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9vw;
+      font-weight: 700;
+      color: #d4af37;
+      width: 2.2vw;
+    }
+
+    .order-content {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .order-name {
+      font-size: 1.05vw;
+      font-weight: 600;
+      color: #edf2f7;
+      letter-spacing: -0.01em;
+    }
+
+    .order-time {
+      font-size: 0.8vw;
+      color: #8b9bb4;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    /* --- [우측: 시상식 & 수상자 명단 그리드] --- */
+    .awards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 1.3vh 1.2vw;
+      height: 100%;
+    }
+
+    .award-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 14px;
+      padding: 1.5vh 1.3vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+      transition: border-color 0.4s ease, transform 0.4s ease;
+    }
+
+    .award-card:hover {
+      border-color: var(--card-border-glow);
+      transform: translateY(-2px);
+    }
+
+    /* 대상/최우수상 카드 특수 하이라이트 */
+    .award-card.grand {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(16, 24, 43, 0.8) 100%);
+      border: 1.5px solid rgba(242, 201, 76, 0.55);
+      box-shadow: 0 0 22px rgba(212, 175, 55, 0.15);
+    }
+
+    .award-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .award-name-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5vw;
+    }
+
+    .award-trophy {
+      width: 1.3vw;
+      height: 1.3vw;
+      color: #f2c94c;
+      filter: drop-shadow(0 0 5px rgba(242, 201, 76, 0.5));
+    }
+
+    .award-title {
+      font-size: 1.15vw;
+      font-weight: 700;
+      color: #ffe699;
+      letter-spacing: -0.01em;
+    }
+
+    .award-category {
+      font-size: 0.75vw;
+      color: #8fa0ba;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.25vh 0.6vw;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .winners-box {
+      margin-top: 0.8vh;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6vw 0.8vw;
+    }
+
+    .winner-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3vw;
+      background: rgba(212, 175, 55, 0.08);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      padding: 0.45vh 0.8vw;
+      border-radius: 8px;
+    }
+
+    .winner-dept {
+      font-size: 0.8vw;
+      color: #a4b5cd;
+      font-weight: 400;
+    }
+
+    .winner-name {
+      font-size: 1.05vw;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    }
+
+    .award-card.grand .winner-name {
+      color: #fff6cd;
+      font-size: 1.15vw;
+      text-shadow: 0 0 10px rgba(252, 246, 186, 0.6);
+    }
+
+    /* 3. 하단 티커 (롤링 배너 / 축하 문구) */
+    footer {
+      height: 3.8vh;
+      margin-top: 1.6vh;
+      display: flex;
+      align-items: center;
+      background: rgba(10, 16, 30, 0.7);
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .ticker-badge {
+      background: var(--gold-gradient);
+      color: #1a1303;
+      font-weight: 800;
+      font-size: 0.75vw;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0 1.2vw;
+      letter-spacing: 0.05em;
+      box-shadow: 3px 0 10px rgba(0, 0, 0, 0.3);
+      z-index: 2;
+    }
+
+    .ticker-wrapper {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      position: relative;
+    }
+
+    .ticker-content {
+      display: inline-block;
+      padding-left: 100%;
+      animation: ticker 32s linear infinite;
+      font-size: 0.85vw;
+      color: #d6e2f0;
+      letter-spacing: 0.04em;
+    }
+
+    @keyframes ticker {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* 전체화면 토글 안내 버튼 (우측 상단 마우스 오버 시 표시) */
+    .fullscreen-btn {
+      position: absolute;
+      top: 1.5vh;
+      right: 1.5vw;
+      z-index: 100;
+      opacity: 0.2;
+      transition: opacity 0.3s;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      color: #f2c94c;
+      padding: 0.4vh 0.8vw;
+      border-radius: 6px;
+      font-size: 0.75vw;
+      cursor: pointer;
+    }
+    .fullscreen-btn:hover {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 실시간 오로라 광원 배경 -->
+  <div class="ambient-glow ambient-1"></div>
+  <div class="ambient-glow ambient-2"></div>
+
+  <!-- 벡터 파티클 캔버스 (실시간 무한 루프) -->
+  <canvas id="bg-canvas"></canvas>
+
+  <button class="fullscreen-btn" onclick="toggleFullScreen()">⛶ F11 전체화면</button>
+
+  <!-- 메인 UI 화면 -->
+  <div class="screen-container">
+    <!-- 1. 상단 타이틀 영역 -->
+    <header>
+      <div class="brand-section">
+        <div class="hospital-emblem">
+          <svg viewBox="0 0 24 24">
+            <defs>
+              <linearGradient id="goldLinear" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#bf953f" />
+                <stop offset="50%" stop-color="#fcf6ba" />
+                <stop offset="100%" stop-color="#aa771c" />
+              </linearGradient>
+            </defs>
+            <!-- 십자가 + 월계수 앰블럼 SVG -->
+            <path d="M19 10.5V8.8C19 6.2 16.8 4 14.2 4H9.8C7.2 4 5 6.2 5 8.8V15.2C5 17.8 7.2 20 9.8 20H14.2C16.8 20 19 17.8 19 15.2V13.5M10.5 7H13.5V10.5H17V13.5H13.5V17H10.5V13.5H7V10.5H10.5V7Z" stroke="url(#goldLinear)" stroke-width="1.2" fill="none"/>
+          </svg>
+        </div>
+        <div class="title-group">
+          <h1 id="ceremony-title">2026 희망의료재단 송년의 밤 & 비전 선포식</h1>
+          <p id="ceremony-subtitle">함께 만들어온 열정의 결실, 더 찬란하게 도약할 내일을 향하여</p>
+        </div>
+      </div>
+
+      <div class="header-info">
+        <div class="live-clock">
+          <div class="time" id="clock-time">18:30:00</div>
+          <div class="date" id="clock-date">2026.12.30 FRI</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. 메인 바디 (식순 + 수상자 한눈에 보기) -->
+    <main>
+      <!-- [좌측 패널: 행사 식순] -->
+      <section class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon">✧</span> 행사 식순
+          </div>
+          <span class="badge-sub">ORDER OF CEREMONY</span>
+        </div>
+        <div class="order-list" id="order-list-container">
+          <!-- 스크립트에서 자동 생성 -->
+        </div>
+      </section>
+
+      <!-- [우측 패널: 영예의 수상자 명단] -->
+      <section class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon">🏆</span> 2026년도 영예의 수상자
+          </div>
+          <span class="badge-sub">AWARDS & HONORS</span>
+        </div>
+        <div class="awards-grid" id="awards-grid-container">
+          <!-- 스크립트에서 자동 생성 -->
+        </div>
+      </section>
+    </main>
+
+    <!-- 3. 하단 실시간 롤링 안내 배너 -->
+    <footer>
+      <div class="ticker-badge">NOTICE</div>
+      <div class="ticker-wrapper">
+        <div class="ticker-content" id="ticker-text">
+          ✨ 2026년 한 해 동안 환자 중심 진료와 병원 발전을 위해 헌신해주신 모든 임직원 여러분께 진심으로 감사드립니다. 수상을 축하드립니다! &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ✦ 만찬 장소: 본관 7층 컨벤션홀 (시상식 종료 후 19:40부터 진행됩니다)
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    /* =====================================================================
+       [데이터 설정 영역] 
+       여기 있는 텍스트/데이터만 수정하시면 화면에 즉시 반영됩니다!
+       ===================================================================== */
+    const ceremonyData = {
+      title: "2026 의료재단 송년의 밤 & 시상식",
+      subtitle: "함께 만든 열정의 발자취, 더 밝게 빛날 내일을 향해",
+      
+      // 좌측 식순 목록 (순서, 타이틀, 시간, 현재 진행 여부)
+      order: [
+        { num: "01", name: "개회 선언 및 국민의례", time: "18:30", active: false },
+        { num: "02", name: "2026년도 병원 결산 및 비전 보고", time: "18:40", active: false },
+        { num: "03", name: "이사장 / 병원장 송년 기념사", time: "18:55", active: false },
+        { num: "04", name: "우수 부서 및 모범 직원 시상식", time: "19:10", active: true }, // 현재 순서 강조
+        { num: "05", name: "송년 축하 영상 상영 및 단체 촬영", time: "19:40", active: false },
+        { num: "06", name: "만찬 및 임직원 화합의 시간", time: "20:00", active: false }
+      ],
+
+      // 우측 수상자 명단 (각 부문별)
+      awards: [
+        {
+          category: "최우수 영예",
+          name: "올해의 자랑스러운 의료인상",
+          isGrand: true,
+          winners: [
+            { dept: "심혈관센터", name: "김진우 과장" },
+            { dept: "응급의학과", name: "박소영 진료부장" }
+          ]
+        },
+        {
+          category: "최우수 부서",
+          name: "2026 경영평가 최우수 부서상",
+          isGrand: true,
+          winners: [
+            { dept: "진료부문", name: "간호간병통합병동 61W" },
+            { dept: "지원부문", name: "의료정보화기획팀" }
+          ]
+        },
+        {
+          category: "모범 간호",
+          name: "올해의 나이팅게일 (모범간호사)",
+          isGrand: false,
+          winners: [
+            { dept: "중환자실", name: "이현정 책임" },
+            { dept: "수술실", name: "최은서 간호사" },
+            { dept: "외래간호", name: "강민지 주임" }
+          ]
+        },
+        {
+          category: "특별 공로",
+          name: "20년 / 10년 장기근속 공로패",
+          isGrand: false,
+          winners: [
+            { dept: "진단검사의학과", name: "송성민 실장 (20년)" },
+            { dept: "원무기획팀", name: "한지연 차장 (10년)" }
+          ]
+        },
+        {
+          category: "고객 감동",
+          name: "환자 안전 & 최우수 친절스타상",
+          isGrand: false,
+          winners: [
+            { dept: "재활치료센터", name: "윤도현 물리치료사" },
+            { dept: "영상의학과", name: "배준호 방사선사" }
+          ]
+        },
+        {
+          category: "혁신 아이디어",
+          name: "스마트 스마트병원 혁신도약상",
+          isGrand: false,
+          winners: [
+            { dept: "QI의료질향상팀", name: "최우수상 (낙상제로 TFT)" },
+            { dept: "인재개발팀", name: "우수상 (온보딩 프로그램)" }
+          ]
+        }
+      ]
+    };
+
+    /* =====================================================================
+       [1. DOM 렌더링 함수]
+       ===================================================================== */
+    function renderCeremonyScreen() {
+      // 타이틀 바인딩
+      document.getElementById('ceremony-title').innerText = ceremonyData.title;
+      document.getElementById('ceremony-subtitle').innerText = ceremonyData.subtitle;
+
+      // 식순 렌더링
+      const orderContainer = document.getElementById('order-list-container');
+      orderContainer.innerHTML = ceremonyData.order.map(item => `
+        <div class="order-item ${item.active ? 'active' : ''}">
+          <div class="order-num">${item.num}</div>
+          <div class="order-content">
+            <span class="order-name">${item.name}</span>
+            <span class="order-time">${item.time}</span>
+          </div>
+        </div>
+      `).join('');
+
+      // 수상자 렌더링
+      const awardsContainer = document.getElementById('awards-grid-container');
+      awardsContainer.innerHTML = ceremonyData.awards.map(award => `
+        <div class="award-card ${award.isGrand ? 'grand' : ''}">
+          <div class="award-card-header">
+            <div class="award-name-wrap">
+              <svg class="award-trophy" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+              </svg>
+              <span class="award-title">${award.name}</span>
+            </div>
+            <span class="award-category">${award.category}</span>
+          </div>
+          <div class="winners-box">
+            ${award.winners.map(w => `
+              <div class="winner-tag">
+                <span class="winner-dept">${w.dept}</span>
+                <span class="winner-name">${w.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* =====================================================================
+       [2. 실시간 시계 & 날짜 타이머]
+       ===================================================================== */
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock-time').textContent = `${hours}:${minutes}:${seconds}`;
+
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+      const day = dayNames[now.getDay()];
+      document.getElementById('clock-date').textContent = `${year}.${month}.${date} ${day}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* =====================================================================
+       [3. 실시간 벡터 파티클 & 빛가루 캔버스 엔진]
+       동영상(MP4)이 아니라 60fps 무한 루프로 실시간 렌더링되는 모션그래픽
+       ===================================================================== */
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+    const PARTICLE_COUNT = 85;
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class GoldParticle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.size = Math.random() * 2.8 + 0.8;
+        this.speedY = -(Math.random() * 0.45 + 0.15); // 위로 천천히 부유
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.opacity = Math.random() * 0.6 + 0.2;
+        this.pulseSpeed = Math.random() * 0.02 + 0.008;
+        this.pulseAngle = Math.random() * Math.PI * 2;
+        // 골드 계열 톤
+        const golds = [
+          'rgba(242, 201, 76, ',
+          'rgba(255, 230, 153, ',
+          'rgba(212, 175, 55, ',
+          'rgba(255, 255, 255, '
+        ];
+        this.colorPrefix = golds[Math.floor(Math.random() * golds.length)];
+      }
+      update() {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        this.pulseAngle += this.pulseSpeed;
+        const currentOpacity = this.opacity * (0.6 + 0.4 * Math.sin(this.pulseAngle));
+
+        if (this.y < -10 || this.x < -10 || this.x > width + 10) {
+          this.y = height + 10;
+          this.x = Math.random() * width;
+        }
+        return currentOpacity;
+      }
+      draw(currentOpacity) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.colorPrefix + currentOpacity + ')';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(242, 201, 76, 0.8)';
+        ctx.fill();
+        ctx.shadowBlur = 0; // 초기화
+      }
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push(new GoldParticle());
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, width, height);
+      for (let p of particles) {
+        const op = p.update();
+        p.draw(op);
+      }
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    /* =====================================================================
+       [4. GSAP 초기 인트로 애니메이션 & 부드러운 트랜지션]
+       ===================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCeremonyScreen();
+
+      if (window.gsap) {
+        // 헤더 부드러운 페이드인
+        gsap.from('header', {
+          duration: 1.2,
+          y: -40,
+          opacity: 0,
+          ease: 'power3.out'
+        });
+
+        // 좌측 식순 순차 등장
+        gsap.from('.order-item', {
+          duration: 0.9,
+          x: -30,
+          opacity: 0,
+          stagger: 0.12,
+          ease: 'back.out(1.4)',
+          delay: 0.3
+        });
+
+        // 우측 수상자 카드 팝업
+        gsap.from('.award-card', {
+          duration: 1,
+          scale: 0.92,
+          opacity: 0,
+          stagger: 0.1,
+          ease: 'power2.out',
+          delay: 0.5
+        });
+
+        // 하단 티커
+        gsap.from('footer', {
+          duration: 1,
+          y: 30,
+          opacity: 0,
+          ease: 'power2.out',
+          delay: 0.8
+        });
+      }
+    });
+
+    // 전체화면 토글 기능
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+  </script>
+</body>
+</html>
