@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 연말 시상식 & 비전 선포식 - 헐리우드 서치라이트 스테이지</title>
+  
+  <!-- Google Fonts: 럭셔리 세리프 & 볼드 모던 타이포 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Montserrat:ital,wght@0,300;0,500;0,700;0,800;1,700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Three.js 3D 파티클 엔진 & GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+  <style>
+    :root {
+      --gold-1: #ffe699;
+      --gold-2: #f2c94c;
+      --gold-3: #d4af37;
+      --gold-4: #996515;
+      --bg-deep: #030611;
+      --panel-bg: rgba(9, 15, 30, 0.78);
+      --card-bg: rgba(14, 23, 44, 0.68);
+      --card-border: rgba(212, 175, 55, 0.22);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-deep);
+      color: #ffffff;
+      font-family: 'Noto Sans KR', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* 1. Three.js 3D 캔버스 배경 (황금빛 유기적 3D 파티클 메쉬) */
+    #webgl-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* 
+      ========================================================================
+      [2. 양쪽 바닥 헐리우드 서치라이트 (영화제/시상식 대각선 교차 조명 연출)]
+      ========================================================================
+    */
+    .searchlight-wrapper {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .searchlight {
+      position: absolute;
+      bottom: -15vh;
+      width: 32vw;
+      height: 145vh;
+      background: linear-gradient(
+        to top, 
+        rgba(255, 245, 195, 0.38) 0%, 
+        rgba(242, 201, 76, 0.22) 30%, 
+        rgba(212, 175, 55, 0.08) 65%, 
+        transparent 100%
+      );
+      clip-path: polygon(45% 100%, 55% 100%, 100% 0%, 0% 0%);
+      filter: blur(28px);
+      transform-origin: bottom center;
+      opacity: 0.65;
+    }
+
+    /* 좌측 바닥 서치라이트 (대각선 우측 상단으로 쏘며 부드럽게 스윙) */
+    .beam-left {
+      left: 6vw;
+      animation: swaySearchlightLeft 14s ease-in-out infinite alternate;
+    }
+
+    /* 우측 바닥 서치라이트 (대각선 좌측 상단으로 쏘며 교차 스윙) */
+    .beam-right {
+      right: 6vw;
+      animation: swaySearchlightRight 16s ease-in-out infinite alternate;
+    }
+
+    @keyframes swaySearchlightLeft {
+      0% {
+        transform: rotate(18deg);
+        opacity: 0.5;
+      }
+      50% {
+        transform: rotate(44deg);
+        opacity: 0.78;
+      }
+      100% {
+        transform: rotate(26deg);
+        opacity: 0.58;
+      }
+    }
+
+    @keyframes swaySearchlightRight {
+      0% {
+        transform: rotate(-20deg);
+        opacity: 0.55;
+      }
+      50% {
+        transform: rotate(-46deg);
+        opacity: 0.82;
+      }
+      100% {
+        transform: rotate(-15deg);
+        opacity: 0.5;
+      }
+    }
+
+    /* 바닥 투광기 광원 베이스 */
+    .lamp-glow-left, .lamp-glow-right {
+      position: absolute;
+      bottom: -30px;
+      width: 140px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff2be 0%, rgba(242, 201, 76, 0.5) 50%, transparent 100%);
+      filter: blur(20px);
+      opacity: 0.85;
+    }
+    .lamp-glow-left { left: 19vw; }
+    .lamp-glow-right { right: 19vw; }
+
+    /* 은은한 앰비언트 비네팅 */
+    .cinematic-vignette {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 35%, transparent 45%, rgba(2, 4, 10, 0.75) 85%, #020409 100%);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    /* 배경 엠비언트 워터마크 */
+    .bg-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Cinzel', serif;
+      font-size: 13.5vw;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.015);
+      letter-spacing: 0.16em;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 3;
+      line-height: 1;
+    }
+
+    /* 3. 전체 UI 레이아웃 컨테이너 */
+    .stage-wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 2.2vh 3.5vw 2vh 3.5vw;
+    }
+
+    /* --- [상단 헤더] --- */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1.8vh;
+      position: relative;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5vw;
+    }
+
+    /* 3D 자이로스코프 엠블럼 */
+    .gyro-emblem {
+      width: 4.6vw;
+      height: 4.6vw;
+      min-width: 55px;
+      min-height: 55px;
+      position: relative;
+      perspective: 800px;
+    }
+
+    .gyro-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+    }
+
+    .ring-1 {
+      border-top-color: var(--gold-1);
+      border-bottom-color: var(--gold-3);
+      animation: spinGyro1 8s linear infinite;
+    }
+    .ring-2 {
+      border-left-color: var(--gold-2);
+      border-right-color: #ffffff;
+      animation: spinGyro2 11s linear infinite reverse;
+    }
+    .ring-3 {
+      border: 1px dashed rgba(242, 201, 76, 0.5);
+      animation: spinGyro3 16s linear infinite;
+    }
+    .gyro-core {
+      position: absolute;
+      inset: 28%;
+      background: radial-gradient(circle, #fff7d6 0%, #d4af37 60%, transparent 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 20px #f2c94c;
+      animation: pulseCore 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes spinGyro1 {
+      0% { transform: rotateX(60deg) rotateY(0deg) rotateZ(0deg); }
+      100% { transform: rotateX(60deg) rotateY(0deg) rotateZ(360deg); }
+    }
+    @keyframes spinGyro2 {
+      0% { transform: rotateX(120deg) rotateY(20deg) rotateZ(0deg); }
+      100% { transform: rotateX(120deg) rotateY(20deg) rotateZ(360deg); }
+    }
+    @keyframes spinGyro3 {
+      0% { transform: rotateZ(0deg); }
+      100% { transform: rotateZ(360deg); }
+    }
+    @keyframes pulseCore {
+      0% { transform: scale(0.85); opacity: 0.7; }
+      100% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 12px #ffe699); }
+    }
+
+    .title-area {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5vw;
+      font-size: 0.72vw;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      color: #f2c94c;
+      letter-spacing: 0.22em;
+      margin-bottom: 0.3vh;
+    }
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      background: #ffd700;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #ffd700;
+      animation: pulseDot 2s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #ffe699; }
+    }
+
+    .title-area h1 {
+      font-size: 2.5vw;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 0%, #fff4c2 35%, #d4af37 75%, #aa771c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(212, 175, 55, 0.25);
+      line-height: 1.1;
+    }
+
+    .title-area p {
+      font-size: 0.95vw;
+      color: #9cb1ce;
+      letter-spacing: 0.15em;
+      margin-top: 0.4vh;
+      font-weight: 400;
+    }
+
+    /* 헤더 우측 시계 */
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 2vw;
+    }
+
+    .timecode-box {
+      text-align: right;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .timecode-box .time {
+      font-size: 2.2vw;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.35);
+      line-height: 1;
+    }
+    .timecode-box .date {
+      font-size: 0.8vw;
+      color: #d4af37;
+      letter-spacing: 0.12em;
+      margin-top: 0.4vh;
+      font-weight: 600;
+    }
+
+    /* --- [메인 무대 바디: 3:7 비율 비대칭 와이드 레이아웃] --- */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 28% 70%;
+      gap: 2%;
+      padding-top: 1.5vh;
+      min-height: 0;
+    }
+
+    /* 네모박스 패널 (회전 보더 빔 광선 효과) */
+    .hud-panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 2.2vh 1.8vw;
+      border-radius: 20px;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+    }
+
+    .hud-panel::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(transparent, transparent, transparent, #ffe699, transparent 32%);
+      animation: rotateBeam 10s linear infinite;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.42;
+    }
+
+    .hud-panel::after {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      background: var(--panel-bg);
+      border-radius: 19px;
+      z-index: 1;
+    }
+
+    @keyframes rotateBeam {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .panel-inner {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 패널 상단 방송 헤더 */
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1.4vh;
+      margin-bottom: 1.6vh;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .section-title {
+      font-size: 1.35vw;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.6vw;
+      letter-spacing: -0.01em;
+    }
+    .section-title .bullet {
+      width: 4px;
+      height: 1.2vw;
+      background: linear-gradient(180deg, #ffe699, #d4af37);
+      border-radius: 2px;
+      box-shadow: 0 0 10px #ffe699;
+    }
+    .section-tag {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75vw;
+      letter-spacing: 0.15em;
+      color: #d4af37;
+      font-weight: 700;
+    }
+
+    /* [좌측: 타임라인 식순] */
+    .timeline-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      position: relative;
+      padding-left: 1.8vw;
+    }
+
+    .timeline-axis {
+      position: absolute;
+      top: 1.5vh;
+      bottom: 1.5vh;
+      left: 0.7vw;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(255, 230, 153, 0.8) 0%, rgba(212, 175, 55, 0.2) 100%);
+    }
+
+    .timeline-node {
+      position: relative;
+      padding: 0.9vh 1vw;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .timeline-node::before {
+      content: '';
+      position: absolute;
+      left: -1.5vw;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #081123;
+      border: 2px solid #826a27;
+      transition: all 0.3s;
+    }
+
+    .timeline-node.active-stage {
+      background: linear-gradient(90deg, rgba(212, 175, 55, 0.16) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1px solid rgba(255, 230, 153, 0.45);
+      box-shadow: 0 0 20px rgba(242, 201, 76, 0.18);
+      transform: translateX(4px);
+    }
+
+    .timeline-node.active-stage::before {
+      background: #ffffff;
+      border-color: #ffd700;
+      box-shadow: 0 0 12px #ffe699;
+      transform: translateY(-50%) scale(1.3);
+    }
+
+    .node-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .node-idx {
+      font-family: 'Cinzel', serif;
+      font-size: 0.9vw;
+      font-weight: 800;
+      color: #f2c94c;
+    }
+    .node-time {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8vw;
+      color: #7b8fa9;
+    }
+    .node-title {
+      font-size: 1.05vw;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-top: 0.3vh;
+    }
+    .timeline-node.active-stage .node-title {
+      color: #fff8db;
+      font-weight: 700;
+      text-shadow: 0 0 10px rgba(255, 230, 153, 0.3);
+    }
+
+    /* [우측: 수상자 카드 그리드] */
+    .awards-stage-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 1.4vh 1.4vw;
+    }
+
+    .stage-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(212, 175, 55, 0.22);
+      border-radius: 16px;
+      padding: 1.5vh 1.4vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.25);
+      transition: all 0.35s ease;
+    }
+
+    /* 
+      ========================================================================
+      [요청 반영: 부드럽고 몽환적으로 흐려진 사선 반사광 (Soft Sheen Sweep)]
+      칼같은 선이 아니라, 넓은 블러(16px blur)를 먹여 안개처럼 은은하게 스치는 빛무리
+      ========================================================================
+    */
+    .stage-card::after {
+      content: '';
+      position: absolute;
+      top: -70%;
+      left: -110%;
+      width: 90%;
+      height: 250%;
+      background: linear-gradient(
+        90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.02) 20%, 
+        rgba(255, 246, 210, 0.16) 45%, 
+        rgba(255, 255, 255, 0.22) 50%, 
+        rgba(255, 246, 210, 0.16) 55%, 
+        rgba(255, 255, 255, 0.02) 80%, 
+        transparent 100%
+      );
+      filter: blur(16px);
+      transform: rotate(25deg);
+      pointer-events: none;
+      animation: sheenSweepSoft 7.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    /* 6개 카드에 걸쳐 물결치듯 1.1초 간격으로 우아하게 스쳐 지나감 */
+    .stage-card:nth-child(1)::after { animation-delay: 0s; }
+    .stage-card:nth-child(2)::after { animation-delay: 1.1s; }
+    .stage-card:nth-child(3)::after { animation-delay: 2.2s; }
+    .stage-card:nth-child(4)::after { animation-delay: 3.3s; }
+    .stage-card:nth-child(5)::after { animation-delay: 4.4s; }
+    .stage-card:nth-child(6)::after { animation-delay: 5.5s; }
+
+    @keyframes sheenSweepSoft {
+      0% { left: -110%; opacity: 0; }
+      15% { opacity: 0.9; }
+      45% { left: 190%; opacity: 0.9; }
+      46%, 100% { left: 190%; opacity: 0; }
+    }
+
+    /* 카드 호버 시 부드러운 골드 발광 */
+    .stage-card:hover {
+      border-color: rgba(255, 230, 153, 0.6);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(242, 201, 76, 0.15);
+    }
+
+    /* 대상/최우수상 카드 골드 앰비언트 */
+    .stage-card.grand {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(14, 23, 44, 0.8) 100%);
+      border: 1.5px solid rgba(255, 230, 153, 0.45);
+      box-shadow: 0 0 22px rgba(212, 175, 55, 0.12);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .award-badge-pill {
+      font-size: 0.72vw;
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      color: #ffe699;
+      padding: 0.3vh 0.6vw;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .card-main-title {
+      font-size: 1.2vw;
+      font-weight: 800;
+      color: #f7fafc;
+      letter-spacing: -0.01em;
+      margin-top: 0.5vh;
+      display: flex;
+      align-items: center;
+      gap: 0.5vw;
+    }
+
+    .card-main-title svg {
+      width: 1.3vw;
+      height: 1.3vw;
+      fill: #f2c94c;
+      filter: drop-shadow(0 0 5px #f2c94c);
+    }
+
+    .recipients-wrapper {
+      margin-top: 0.9vh;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.6vw 0.8vw;
+    }
+
+    .recipient-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4vw;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.45vh 0.8vw;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+
+    .dept-name {
+      font-size: 0.8vw;
+      color: #9cb1ce;
+      font-weight: 400;
+    }
+
+    .person-name {
+      font-size: 1.05vw;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    }
+
+    .stage-card.grand .person-name {
+      color: #fff6cd;
+      font-size: 1.12vw;
+      text-shadow: 0 0 10px rgba(255, 246, 205, 0.5);
+    }
+
+    /* --- [하단 오디오 이퀄라이저 & 티커 바] --- */
+    footer {
+      height: 4vh;
+      margin-top: 1.6vh;
+      display: flex;
+      align-items: center;
+      background: rgba(4, 9, 20, 0.8);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .audio-equalizer {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 18px;
+      padding: 0 1vw;
+    }
+
+    .eq-bar {
+      width: 3px;
+      background: #ffe699;
+      border-radius: 1px;
+      animation: eqDance 1.2s ease-in-out infinite alternate;
+    }
+    .eq-bar:nth-child(2) { animation-duration: 0.8s; }
+    .eq-bar:nth-child(3) { animation-duration: 1.4s; }
+    .eq-bar:nth-child(4) { animation-duration: 1.0s; }
+    .eq-bar:nth-child(5) { animation-duration: 0.6s; }
+    .eq-bar:nth-child(6) { animation-duration: 1.3s; }
+
+    @keyframes eqDance {
+      0% { height: 4px; opacity: 0.4; }
+      100% { height: 18px; opacity: 1; filter: drop-shadow(0 0 4px #ffe699); }
+    }
+
+    .broadcast-tag {
+      background: linear-gradient(135deg, #d4af37, #f2c94c);
+      color: #0b0d14;
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: 0.75vw;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0 1.2vw;
+      letter-spacing: 0.1em;
+    }
+
+    .marquee-area {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .marquee-text {
+      display: inline-block;
+      padding-left: 100%;
+      animation: marquee 35s linear infinite;
+      font-size: 0.85vw;
+      color: #d1dfed;
+      letter-spacing: 0.05em;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* 전체화면 컨트롤 안내 */
+    .fs-hint {
+      position: absolute;
+      top: 1.8vh;
+      right: 1.8vw;
+      z-index: 100;
+      opacity: 0.25;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      color: #ffe699;
+      padding: 0.4vh 0.8vw;
+      border-radius: 6px;
+      font-size: 0.72vw;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+    .fs-hint:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Three.js 3D 황금 파티클 메쉬 배경 캔버스 -->
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- 2. 양쪽 바닥 헐리우드 대각선 서치라이트 (영화제/시상식 교차 스윙 광원) -->
+  <div class="searchlight-wrapper">
+    <div class="searchlight beam-left"></div>
+    <div class="searchlight beam-right"></div>
+    <div class="lamp-glow-left"></div>
+    <div class="lamp-glow-right"></div>
+  </div>
+
+  <!-- 3. 은은한 앰비언트 비네팅 -->
+  <div class="cinematic-vignette"></div>
+
+  <!-- 4. 배경 텍스트 워터마크 -->
+  <div class="bg-watermark">VISION 2026</div>
+
+  <button class="fs-hint" onclick="toggleFullScreen()">⛶ F11 전체화면</button>
+
+  <!-- 5. 메인 방송 무대 UI -->
+  <div class="stage-wrapper">
+    <!-- 상단 방송 헤더 -->
+    <header>
+      <div class="header-left">
+        <!-- 3D 자이로스코프 회전 엠블럼 -->
+        <div class="gyro-emblem">
+          <div class="gyro-ring ring-1"></div>
+          <div class="gyro-ring ring-2"></div>
+          <div class="gyro-ring ring-3"></div>
+          <div class="gyro-core"></div>
+        </div>
+        <div class="title-area">
+          <div class="stage-badge">
+            <span class="badge-dot"></span> 2026 GALA AWARDS & CEREMONY
+          </div>
+          <h1 id="screen-title">2026 연말 송년의 밤 & 의료대상 시상식</h1>
+          <p id="screen-subtitle">함께 만든 열정의 발자취, 더 찬란하게 도약할 내일을 향하여</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="timecode-box">
+          <div class="time" id="live-time">18:30:00</div>
+          <div class="date" id="live-date">2026.12.30 FRI</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 메인 무대 (식순 + 시상식 그리드) -->
+    <main>
+      <!-- [좌측 HUD 패널: 행사 식순] -->
+      <section class="hud-panel">
+        <div class="panel-inner">
+          <div class="section-head">
+            <div class="section-title">
+              <span class="bullet"></span> 행사 진행 순서
+            </div>
+            <span class="section-tag">PROGRAM TIMELINE</span>
+          </div>
+          <div class="timeline-container" id="timeline-container">
+            <!-- 자바스크립트로 식순 렌더링 -->
+          </div>
+        </div>
+      </section>
+
+      <!-- [우측 HUD 패널: 시상식 스테이지] -->
+      <section class="hud-panel">
+        <div class="panel-inner">
+          <div class="section-head">
+            <div class="section-title">
+              <span class="bullet"></span> 영예의 수상 부문 & 수상자 명단
+            </div>
+            <span class="section-tag">HONOREES & AWARDS</span>
+          </div>
+          <div class="awards-stage-grid" id="awards-grid">
+            <!-- 자바스크립트로 수상자 카드 렌더링 -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 하단 오디오 이퀄라이저 & 롤링 티커 -->
+    <footer>
+      <div class="broadcast-tag">ON AIR</div>
+      <div class="audio-equalizer">
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+        <div class="eq-bar"></div>
+      </div>
+      <div class="marquee-area">
+        <div class="marquee-text" id="marquee-text">
+          ✦ 2026년 한 해 동안 헌신해주신 모든 임직원 여러분의 노고에 깊은 존경과 감사를 드립니다 &nbsp;&nbsp;&nbsp;&nbsp; 🏆 영예의 수상을 진심으로 축하드립니다! &nbsp;&nbsp;&nbsp;&nbsp; ✦ 만찬 장소: 본관 7층 그랜드 컨벤션홀 (시상식 종료 후 19:40부터 진행됩니다)
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    /* =====================================================================
+       [데이터 설정 영역] 
+       ===================================================================== */
+    const ceremonyData = {
+      title: "2026 연말 송년의 밤 & 의료대상 시상식",
+      subtitle: "함께 만든 열정의 발자취, 더 찬란하게 도약할 내일을 향하여",
+      
+      order: [
+        { num: "01", name: "개회 선언 및 국민의례", time: "18:30", active: false },
+        { num: "02", name: "2026년도 병원 결산 및 비전 보고", time: "18:40", active: false },
+        { num: "03", name: "이사장 / 병원장 송년 기념사", time: "18:55", active: false },
+        { num: "04", name: "우수 부서 및 모범 직원 시상식", time: "19:10", active: true },
+        { num: "05", name: "송년 축하 영상 상영 및 단체 촬영", time: "19:40", active: false },
+        { num: "06", name: "만찬 및 임직원 화합의 시간", time: "20:00", active: false }
+      ],
+
+      awards: [
+        {
+          id: 0,
+          category: "GRAND PRIX",
+          name: "올해의 자랑스러운 의료대상",
+          isGrand: true,
+          winners: [
+            { dept: "심혈관센터", name: "김진우 과장" },
+            { dept: "응급의학과", name: "박소영 진료부장" }
+          ]
+        },
+        {
+          id: 1,
+          category: "BEST DEPARTMENT",
+          name: "경영평가 최우수 부서상",
+          isGrand: true,
+          winners: [
+            { dept: "진료부문", name: "간호간병통합병동 61W" },
+            { dept: "지원부문", name: "의료정보화기획팀" }
+          ]
+        },
+        {
+          id: 2,
+          category: "EXCELLENCE IN NURSING",
+          name: "올해의 나이팅게일 (모범간호사)",
+          isGrand: false,
+          winners: [
+            { dept: "중환자실", name: "이현정 책임" },
+            { dept: "수술실", name: "최은서 간호사" },
+            { dept: "외래간호", name: "강민지 주임" }
+          ]
+        },
+        {
+          id: 3,
+          category: "HONORABLE SERVICE",
+          name: "20년 / 10년 장기근속 공로패",
+          isGrand: false,
+          winners: [
+            { dept: "진단검사의학과", name: "송성민 실장 (20년)" },
+            { dept: "원무기획팀", name: "한지연 차장 (10년)" }
+          ]
+        },
+        {
+          id: 4,
+          category: "CUSTOMER SERVICE",
+          name: "환자안전 & 최우수 친절스타상",
+          isGrand: false,
+          winners: [
+            { dept: "재활치료센터", name: "윤도현 물리치료사" },
+            { dept: "영상의학과", name: "배준호 방사선사" }
+          ]
+        },
+        {
+          id: 5,
+          category: "SMART INNOVATION",
+          name: "스마트 스마트병원 혁신도약상",
+          isGrand: false,
+          winners: [
+            { dept: "QI의료질향상팀", name: "최우수상 (낙상제로 TFT)" },
+            { dept: "인재개발팀", name: "우수상 (온보딩 프로그램)" }
+          ]
+        }
+      ]
+    };
+
+    /* =====================================================================
+       [1. DOM 렌더링]
+       ===================================================================== */
+    function renderStage() {
+      document.getElementById('screen-title').innerText = ceremonyData.title;
+      document.getElementById('screen-subtitle').innerText = ceremonyData.subtitle;
+
+      // 식순 렌더링
+      const timelineBox = document.getElementById('timeline-container');
+      timelineBox.innerHTML = `
+        <div class="timeline-axis"></div>
+        ${ceremonyData.order.map(item => `
+          <div class="timeline-node ${item.active ? 'active-stage' : ''}">
+            <div class="node-header">
+              <span class="node-idx">${item.num}</span>
+              <span class="node-time">${item.time}</span>
+            </div>
+            <div class="node-title">${item.name}</div>
+          </div>
+        `).join('')}
+      `;
+
+      // 수상자 카드 렌더링
+      const awardsBox = document.getElementById('awards-grid');
+      awardsBox.innerHTML = ceremonyData.awards.map((award) => `
+        <div class="stage-card ${award.isGrand ? 'grand' : ''}">
+          <div class="card-top">
+            <span class="award-badge-pill">${award.category}</span>
+          </div>
+          <div class="card-main-title">
+            <svg viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+            ${award.name}
+          </div>
+          <div class="recipients-wrapper">
+            ${award.winners.map(w => `
+              <div class="recipient-tag">
+                <span class="dept-name">${w.dept}</span>
+                <span class="person-name">${w.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* =====================================================================
+       [2. 실시간 시계]
+       ===================================================================== */
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('live-time').innerText = `${h}:${m}:${s}`;
+
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+      document.getElementById('live-date').innerText = `${year}.${month}.${date} ${days[now.getDay()]}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* =====================================================================
+       [3. Three.js: 3D 유기적 황금 파티클 메쉬 엔진]
+       ===================================================================== */
+    const canvas = document.getElementById('webgl-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, -18, 25);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const COLS = 58;
+    const ROWS = 42;
+    const count = COLS * ROWS;
+    const positions = new Float32Array(count * 3);
+    const scales = new Float32Array(count);
+
+    let idx = 0;
+    const spacingX = 1.35;
+    const spacingY = 1.15;
+
+    for (let ix = 0; ix < COLS; ix++) {
+      for (let iy = 0; iy < ROWS; iy++) {
+        positions[idx * 3] = (ix - COLS / 2) * spacingX;
+        positions[idx * 3 + 1] = (iy - ROWS / 2) * spacingY;
+        positions[idx * 3 + 2] = 0;
+        scales[idx] = 1.2;
+        idx++;
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('scale', new THREE.BufferAttribute(scales, 1));
+
+    const particleTexture = createGlowTexture();
+    const material = new THREE.PointsMaterial({
+      color: 0xf2c94c,
+      size: 0.65,
+      map: particleTexture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      opacity: 0.65
+    });
+
+    const particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    // 부유하는 3D 은은한 별가루 (Ambient Stardust)
+    const dustCount = 130;
+    const dustPos = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount * 3; i += 3) {
+      dustPos[i] = (Math.random() - 0.5) * 65;
+      dustPos[i + 1] = (Math.random() - 0.5) * 50;
+      dustPos[i + 2] = (Math.random() - 0.5) * 35;
+    }
+    const dustGeo = new THREE.BufferGeometry();
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    const dustMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.42,
+      map: particleTexture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      opacity: 0.45
+    });
+    const dustParticles = new THREE.Points(dustGeo, dustMat);
+    scene.add(dustParticles);
+
+    function createGlowTexture() {
+      const cvs = document.createElement('canvas');
+      cvs.width = 64;
+      cvs.height = 64;
+      const ctx = cvs.getContext('2d');
+      const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+      grad.addColorStop(0.3, 'rgba(255, 230, 153, 0.85)');
+      grad.addColorStop(0.7, 'rgba(212, 175, 55, 0.25)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(cvs);
+    }
+
+    let clock = new THREE.Clock();
+
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+      const elapsedTime = clock.getElapsedTime();
+
+      const posArray = geometry.attributes.position.array;
+      let pIdx = 0;
+      for (let ix = 0; ix < COLS; ix++) {
+        for (let iy = 0; iy < ROWS; iy++) {
+          const z = (Math.sin((ix + elapsedTime * 1.4) * 0.28) * 2.2) +
+                    (Math.cos((iy + elapsedTime * 1.1) * 0.38) * 2.5);
+          posArray[pIdx * 3 + 2] = z;
+          pIdx++;
+        }
+      }
+      geometry.attributes.position.needsUpdate = true;
+
+      dustParticles.rotation.y = elapsedTime * 0.035;
+      dustParticles.rotation.z = elapsedTime * 0.018;
+
+      renderer.render(scene, camera);
+    }
+    animate3D();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    /* =====================================================================
+       [4. 초기화 및 전체화면]
+       ===================================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderStage();
+
+      if (window.gsap) {
+        gsap.from('header', { y: -50, opacity: 0, duration: 1.2, ease: "power3.out" });
+        gsap.from('.hud-panel', { scale: 0.94, opacity: 0, duration: 1.1, stagger: 0.15, ease: "power2.out", delay: 0.2 });
+        gsap.from('.timeline-node', { x: -30, opacity: 0, duration: 0.8, stagger: 0.08, delay: 0.4 });
+        gsap.from('footer', { y: 40, opacity: 0, duration: 0.9, delay: 0.7 });
+      }
+    });
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+  </script>
+</body>
+</html>
