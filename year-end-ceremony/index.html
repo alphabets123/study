@@ -444,6 +444,42 @@
       transition: all 0.35s ease;
     }
 
+    /* 카드 표면을 왼쪽에서 오른쪽으로 쓱 쓸고 지나가는 사선 럭셔리 반사광 (Sheen Sweep) */
+    .stage-card::after {
+      content: '';
+      position: absolute;
+      top: -60%;
+      left: -80%;
+      width: 45%;
+      height: 220%;
+      background: linear-gradient(
+        90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.05) 20%, 
+        rgba(255, 246, 205, 0.35) 50%, 
+        rgba(255, 255, 255, 0.05) 80%, 
+        transparent 100%
+      );
+      transform: rotate(25deg);
+      pointer-events: none;
+      animation: sheenSweep 6.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    /* 각 카드마다 미세한 시간차를 두어 빛이 물결치듯 자연스럽게 흐르는 효과 */
+    .stage-card:nth-child(1)::after { animation-delay: 0s; }
+    .stage-card:nth-child(2)::after { animation-delay: 0.9s; }
+    .stage-card:nth-child(3)::after { animation-delay: 1.8s; }
+    .stage-card:nth-child(4)::after { animation-delay: 2.7s; }
+    .stage-card:nth-child(5)::after { animation-delay: 3.6s; }
+    .stage-card:nth-child(6)::after { animation-delay: 4.5s; }
+
+    @keyframes sheenSweep {
+      0% { left: -80%; opacity: 0; }
+      10% { opacity: 1; }
+      40% { left: 160%; opacity: 1; }
+      41%, 100% { left: 160%; opacity: 0; }
+    }
+
     /* 카드 호버 시 부드러운 골드 발광 */
     .stage-card:hover {
       border-color: rgba(255, 230, 153, 0.6);
